@@ -18,30 +18,44 @@ Este comando descargara automanticamente todas las dependencias que requiere el 
 
 Una vez completados estos pasos, su servidor estará listo para arrancar con el comando:  npm run dev
 
-Ahora, para la instalación de redis, debe ejecutar los siguientes comandos y esperar a que cada uno de ellos finalice:
-
+Ahora debemos instalar el balanceador de carga, para este caso haremos uso de NGINX, cuya instalación se realiza mediante el siguiente comando:
                       sudp apt update
-                      sudo apt install -y redis
-                      sudo apt install redis-tools
+                      sudo apt install nginx
                       
-Ya tenemos intalado redis, ahora vamos a comprobar si fue correcta su instalación y si está operando, para esto debemos ejecutar los
-siguientes comandos y esperar a que cada uno de ellos finalice:
+Ya tenemos instalado NGINX, ahora debemos configurarlo, para esto debemos introducir por consola las siguientes lineas de comando:
             
-                      redis-cli
+                      sudo touch /etc/nginx/conf.d/load-balancer.conf
+                      sudo rm -r /etc/nginx/sites-enabled/default
+                      sudo systemctl restart nginx
+                      sudo nano /etc/nginx/conf.d/load-balancer.conf
           
-          Al ejecutar este comando tendremos corriendo nuestro servidor de redis, se mostrará nuestra dirección de localhost junto con
-          un puerto por defecto, el cual suele tener este aspecto: 127.0.0.1:6379>
-          para verificar que todo está en orden, debemos escribir el comando "ping", sin comillas y todo en minúsculas, a lo que se nos
-          contestará con un "PONG", lo que indica que tenemos conexión.
-          
-Ahora debemos setear algunos valores, para esto, dentro del servicio de redis, debemos introducir los siguientes comandos:
+Una vez llegado a este punto, podemos apreciar que el editor de texto __nano__ se habrá desplegado, dentro de este debemos fijar el siguiente archivo de configuración;
+                        
+                      upstream backend{
+                        server localhost:3000;
+                        server localhost:3001;
+                        server localhost:3002;
+                        }
+                      server{
+                        listen 80;
+                        location /tarea3 {
+                                proxy_pass http://backend;
+                                }
+                        }
+                     
+                      
+Para guardar estos cambios, debemos oprimir CTRL+X, luego la letra __S__ y finalmente aceptar y abremos salido del editor de texto. Realizado esto, añadomos el siguiente comando por consola:
+```
 
-                      config get maxmemory
-                      config set maxmemory 1M
-                      config set maxmemory-policy volatile-lru
-El primer comando sirve para ver la configuracion de la memoria máxima que puede utilizar redis; el segundo comando setea la memoria maxima en 1mb, y finalmente el último comando configura el uso de memoria con el algoritmo de lru, el cual consiste en que en el caso de que se llene la memoria de 1mb, se eliminara el dato más antiguo en memoria siempre y cuando este libere el espacio necesario para insertar el nuevo dato.
 
-Teniendo todas estas configuraciones, el servicio completo está listo para usarse ;D
+                       sudo systemctl restart nginx
+```
+
+Con esto tendremos operativo nuestro balanceador de carga.
+Ahora debe ejecutar los 3 servidores, para esto una vez clonado este repositorio, debe arrancar los servidores indicando los puertos donde serán ejecutados, para esto debe abrir 3 terminales distintas dentro de la carpeta, y ejecutar los siguientes comandos, cada uno en una terminal distinta.
+``` 
+                      AQUI COMANDOS DEL JOAQUIN
+```
 
 Cabe recalcar que en nuestra tarea, la ruta de buscador si hace la verificación de si el búsqueda ya se encuentra en la cache, pero si no la encuentra, este accede directamente al archivo json donde se encuentra el inventario, esto debido a que no logramos implementar la comunicacion con mediante el metodo grpc con el servidor.
                     
